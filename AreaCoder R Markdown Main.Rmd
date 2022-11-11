@@ -1,30 +1,56 @@
 ---
-title: "AreaCoder RMark Main"
+title: "Fastest 100 metre times"
 author: "Connor Wiegand"
-date: "2022-11-11"
-output: html_document
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+  html_document:
+    theme: yeti
+    highlight: haddock
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    keep_md: yes
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## This next line sets the default behaviour for all R chunks in the .Rmd document.
+## I recommend you take a look here: https://rmarkdown.rstudio.com/authoring_rcodechunks.html
+knitr::opts_chunk$set(echo = TRUE, cache = T, error = TRUE, dpi=300)
 ```
 
-## R Markdown
+## Background
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+In class, we practiced webscraping with the Wikipedia page on the [Men's 100 metres world record progression](http://en.wikipedia.org/wiki/Men%27s_100_metres_world_record_progression). For this assignment, we're going to continue with a similar theme, except we won't only be limiting ourselves to world record times. The page that we're scraping will also have a few complications that require extra (or at least different) steps.
+
+Now is good time to load any packages that you will be needing, as well as set your preferred plotting theme, etc. 
+
+## Loading Packages
+
+- Leaflet allows for interactive maps, only in Simple Features (sf)
+- Choroplethr uses ggplot and data frames converted from shapefiles (sp)\
+
+```{r libs, cache=F, message=F}
+## Load your packages here, e.g.
+pacman::p_load(rvest, readr, tidyverse, magrittr, data.table)
+pacman::p_load(lubridate, zoo)
+pacman::p_load(sf, rnaturalearth, rgeos, leaflet)
+pacman::p_load(choroplethr, choroplethrAdmin1)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+## 1) Read in the data
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Take a look at the [webpage](http://www.alltime-athletics.com/m_100ok.htm) in your browser. We only want the information contained in the main table at the top (i.e. ignore the rolling starts, manual timing, etc.) Read this table into R and call the resulting object `m100_wp`.
+
+*Hint: In class, we practiced identifying the correct HMTL elements with CSS selectors and SelectorGadget. However, you will almost certainly find it easier / more precise to scrape the table in this example via its XPath. Use your browser's "Inspect" functionality to find and copy over this XPath. Remember to specify the "xpath" argument (instead of the default "css") when pulling this information into R, i.e. `rvest::html_element(xpath = "XPATH_HERE")`.*
+
+```{r read}
+m100 = read_html("http://www.alltime-athletics.com/m_100ok.htm")
+m100_wp <- html_element(m100, xpath = '/html/body/center[3]/pre/text()[1]')
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
