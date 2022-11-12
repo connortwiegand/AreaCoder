@@ -84,7 +84,7 @@ admin1_choropleth("peru", peru_regions)
 data(country.map)
 ggplot(country.map, aes(long, lat, group=group)) + geom_polygon()
 
-data(state.map)
+data("state.map")
 ggplot(state.map, aes(long, lat, group=group)) + geom_polygon()
 
 ```
