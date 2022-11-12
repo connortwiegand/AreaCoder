@@ -34,10 +34,10 @@ knitr::opts_chunk$set(eval=T, include=T, echo = T, cache = T, error = TRUE, dpi=
 
 ```{r libs, cache=F}
 ## Load your packages here, e.g.
-pacman::p_load(rvest, readr, tidyverse, magrittr, data.table)
+pacman::p_load(rvest, readr, tidyverse, magrittr, data.table, gridExtra, utils)
 pacman::p_load(lubridate, zoo)
-pacman::p_load(sf, rnaturalearth, rgeos, leaflet)
-pacman::p_load(choroplethr, choroplethrAdmin1)
+pacman::p_load(sf, rnaturalearth, rgeos, leaflet, mapproj,)
+pacman::p_load(choroplethr, choroplethrAdmin1,choroplethrMaps)
 ```
 
 ## 2) Proof of Concept
@@ -70,16 +70,37 @@ wiki_table <- html_table(wiki_wp)
 
 
 ## 2-2: Get Regions of Peru
+The following gives an example choroplethr map for Peru:
+```{r choro_ex}
+#Works:
+peru_regions <- get_admin1_regions("peru")
+peru_regions$value = 1:nrow(peru_regions)
+admin1_choropleth("peru", peru_regions)
+
+# data(df_pop_state)
+# state_choropleth(df_pop_state)
+
+#Doesn't:
+data(country.map)
+ggplot(country.map, aes(long, lat, group=group)) + geom_polygon()
+
+data(state.map)
+ggplot(state.map, aes(long, lat, group=group)) + geom_polygon()
+
+```
+
 ```{r}
 countries <- ne_countries(returnclass = "sf") %>% st_transform(8857) 
 #ggplot(admin1.map, aes(long, lat, group=group)) + geom_polygon()
 
-# data(admin1.map)
-# head(admin1.map)
+data(admin1.map)
+head(admin1.map)
 # data(admin1.regions)
 # head(admin1.regions)
 admin1_map("peru")
 ?admin1_map
+get_admin1_map("peru")
+View(get_admin1_map("peru"))
 
 proof_regions <- get_admin1_regions("peru")[,2]
 colnames(wiki_table) <- c("value", "region")
@@ -104,6 +125,10 @@ for (i in 1:24){
   }
 }
 View(chn_wkd)
+
+country.map = admin1.map[admin1.map$admin %in% "peru",]
+ggplot(country.map, aes(long, lat, group=group)) + 
+    geom_polygon()
 
 admin1_choropleth("peru", data.frame(rep(0,26)))
 ```
