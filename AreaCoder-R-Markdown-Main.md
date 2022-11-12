@@ -1,7 +1,7 @@
 ---
 title: "AreaCoder"
 author: "Connor Wiegand"
-date: "`r format(Sys.time(), '%d %B %Y')`"
+date: "11 November 2022"
 output:
   html_document:
     theme: yeti
@@ -14,31 +14,36 @@ output:
     toc: yes
     toc_depth: '4'
 always_allow_html: true
-editor_options: 
-  chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
-## This next line sets the default behaviour for all R chunks in the .Rmd document.
-## I recommend you take a look here: https://rmarkdown.rstudio.com/authoring_rcodechunks.html
-knitr::opts_chunk$set(eval=T, include=T, echo = T, cache = T, error = TRUE, dpi=300)
-```
+
 
 ## Background
 
 
-## 1) Loading Packages
+## Loading Packages
 
 - Leaflet allows for interactive maps, only in Simple Features (sf)
 - Choroplethr uses ggplot and data frames converted from shapefiles (sp)\
 
-```{r libs, cache=F}
+
+```r
 ## Load your packages here, e.g.
 pacman::p_load(rvest, readr, tidyverse, magrittr, data.table)
 pacman::p_load(lubridate, zoo)
 pacman::p_load(sf, rnaturalearth, rgeos, leaflet)
 pacman::p_load(choroplethr, choroplethrAdmin1)
 ```
+
+
+## 1) Read in the data
+
+
+```r
+m100 = read_html("http://www.alltime-athletics.com/m_100ok.htm")
+m100_wp <- html_element(m100, xpath = '/html/body/center[3]/pre/text()[1]')
+```
+
 
 ## 2) Proof of Concept
 
@@ -50,7 +55,8 @@ Let's start by pulling the area code data that we need from wikipedia:
 
 #### 2-1-0: Read website
 
-```{r proofreadweb}
+
+```r
 wiki_site <- read_html("https://en.wikipedia.org/wiki/Telephone_numbers_in_Peru")
 ```
 
@@ -58,7 +64,8 @@ wiki_site <- read_html("https://en.wikipedia.org/wiki/Telephone_numbers_in_Peru"
 For this, one must copy the xpath via inspect element by hand. In this example, using just the table body (no headers) is what works. This still reads and preserves the headers.
 
 One large challenge for the future is ** *how to automate this?* **
-```{r proofxpath}
+
+```r
 wiki_xpath <- '/html/body/div[3]/div[3]/div[5]/div[1]/table[2]/tbody'
 ## Here, using just the table body (no headers) is what works
 ### headers are still preserved
@@ -68,54 +75,20 @@ wiki_wp <- html_element(wiki_site, xpath = wiki_xpath) #*
 wiki_table <- html_table(wiki_wp)
 ```
 
+So there that is...
 
 ## 2-2: Get Regions of Peru
-```{r}
 countries <- ne_countries(returnclass = "sf") %>% st_transform(8857) 
-#ggplot(admin1.map, aes(long, lat, group=group)) + geom_polygon()
 
-# data(admin1.map)
-# head(admin1.map)
-# data(admin1.regions)
-# head(admin1.regions)
-admin1_map("peru")
-?admin1_map
+data(admin1.map)
+head(admin1.map)
+ggplot(admin1.map, aes(long, lat, group=group)) + geom_polygon()
 
-proof_regions <- get_admin1_regions("peru")[,2]
-colnames(wiki_table) <- c("value", "region")
-
-dfn <- data.frame(proof_regions[1:26], wiki_table$region[1:26])
-
-chn_wkd[grep(paste0('[[:space:]]',dfn[17,2]),dfn[,1], ignore.case = T),1]
-chn_wkd[11,]
-
-dfn[17,2]
-wiki_table[17,]
-# grep(paste0('[[:space:]]',dfn[17,2]),dfn[,1], ignore.case = T) %>% length()
-# grep(paste0('[[:space:]]',dft[10,2]),dft[,1], ignore.case = T)
-
-#Choropeth-names with wiki data: chn_wkd
-chn_wkd <- data.frame("region" = proof_regions, "value" = rep(0,26))
-
-for (i in 1:24){
-  if (length(grep(paste0('[[:space:]]',dfn[i,2]),dfn[,1], ignore.case = T)) != 0) {
-    ind <- grep(paste0('[[:space:]]',dfn[i,2]),dfn[,1], ignore.case = T)
-    chn_wkd[ind,2] <- wiki_table[i,1] 
-  }
-}
-View(chn_wkd)
-
-admin1_choropleth("peru", data.frame(rep(0,26)))
-```
-
-```{r test22}
 admin1_map("japan")
 
 data(df_japan_census)
 df_japan_census$value = df_japan_census$pop_density_km2_2010
 admin1_choropleth("japan", df_japan_census)
-```
-
 
 
 ## 3) Individual Phone Number Maps
