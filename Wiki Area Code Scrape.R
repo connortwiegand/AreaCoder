@@ -90,7 +90,7 @@ names(pe_df)[names(pe_df) == "area code"] <- "value"
 
 admin_pe <- get_admin1_regions("peru")[,2]
 
-admin_spots <- stringdist::amatch(admin_pe, unlist(pe_df[,2]), maxDist = "10")
+admin_spots <- stringdist::amatch(unlist(pe_df[,2]), admin_pe, maxDist = "10")
 
 pe_df[,2]%<>% unlist()
 
